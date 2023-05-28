@@ -9,6 +9,8 @@ public class Star : MonoBehaviour
 
     private SpriteRenderer spriteRenderer;
 
+    public Sprite StarSprite => starSprite;
+
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -22,8 +24,8 @@ public class Star : MonoBehaviour
     public void InitializeStar()
     {
         gameObject.name = starName;
-        int randomSize = Random.Range(1, 11); // Random size between 1 and 10
-        transform.localScale = new Vector3(randomSize, randomSize, 1);
+        /*int randomSize = Random.Range(1, 11); // Random size between 1 and 10
+        transform.localScale = new Vector3(randomSize, randomSize, 1);*/
         spriteRenderer.sprite = starSprite;
     }
 }

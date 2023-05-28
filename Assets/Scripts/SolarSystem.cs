@@ -9,11 +9,15 @@ public class SolarSystem : MonoBehaviour
     [SerializeField] private int minPlanets = 0;
     [SerializeField] private int maxPlanets = 9;
     [SerializeField] private int orbitMultiplier = 5;
+    [SerializeField] private MiniMap miniMap;
 
     private Star star;
+    public Star Star => star;
+    
     private List<Planet> planets = new List<Planet>();
+    public List<Planet> Planets => planets;
 
-        public float BoundaryDistance
+    public float BoundaryDistance
     {
         get { return (maxPlanets + 1) * orbitMultiplier; }
     }
@@ -27,10 +31,12 @@ public class SolarSystem : MonoBehaviour
     {
         CreateStar();
         int planetCount = Random.Range(minPlanets, maxPlanets + 1);
-        for (int i = 0; i < planetCount; i++)
+        for (int i = 0; i < 9; i++)
         {
             CreatePlanet(i + 1);
         }
+
+        miniMap.InitializeMiniMap(this);
     }
 
     private void CreateStar()
@@ -52,8 +58,4 @@ public class SolarSystem : MonoBehaviour
         planet.InitializePlanet(orbitNumber);
         planets.Add(planet);
     }
-
-
-
-
 }

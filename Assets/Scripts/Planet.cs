@@ -28,6 +28,8 @@ public class Planet : MonoBehaviour
         get { return orbitNumber; }
     }
 
+    public Sprite PlanetSprite => surfaceTypeSprites[(int)surfaceType];
+
     private SpriteRenderer spriteRenderer;
 
     private void Awake()
