@@ -3,60 +3,50 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-
-
 public class TilemapStructure : MonoBehaviour
 {   
-    [Serializable]
-    class TileType
-    {
-        public GroundTileType GroundTile;
-        public Color Color;
-    }
- 
     [SerializeField]
-    private TileType[] TileTypes;
+    private AlgorithmBase[] _algorithms;
 
     private int[] _tiles;
     private Tilemap _graphicMap;
-    public int Width, Height, TileSize;
+    [HideInInspector]
+    public int Width, Height;
+
+    	
+    [HideInInspector]
+    public TileGrid Grid;
+    
     private Dictionary<int, Tile> _tileTypeDictionary;
 
+    [SerializeField]
+    private TilemapType _type;
+    public TilemapType Type { get { return _type; } }
+
     /// <summary>
-    /// Method called by unity automatically.
+    /// Method to initialize our tilemap.
     /// </summary>
-    private void Awake()
+    public void Initialize()
     {
         // Retrieve the Tilemap component from the same object this script is attached to
         _graphicMap = GetComponent<Tilemap>();
-
+    
+        // Retrive the TileGrid component from our parent gameObject
+        Grid = transform.parent.GetComponent<TileGrid>();
+    
+        // Get width and height from parent
+        Width = Grid.Width;
+        Height = Grid.Height;
+    
         // Initialize the one-dimensional array with our map size
         _tiles = new int[Width * Height];
-
-        // Initialize a dictionary lookup table to help us later
-        _tileTypeDictionary = new Dictionary<int, Tile>();
- 
-        // We need to also assign a texture, so we create one real quick
-        var tileSprite = Sprite.Create(new Texture2D(TileSize, TileSize), new Rect(0, 0, TileSize, TileSize), new Vector2(0.5f, 0.5f), TileSize);
- 
-        // Create a Tile for each TileType
-        foreach (var tiletype in TileTypes)
+    
+        // Apply all the algorithms to the tilemap
+        foreach (var algorithm in _algorithms)
         {
-            // Create a scriptable object instance of type Tile (inherits from TileBase)
-            var tile = ScriptableObject.CreateInstance<Tile>();
-            // Make sure color is not transparant
-            tiletype.Color.a = 1;
-            // Set the tile color
-            tile.color = tiletype.Color;
-            // Assign the sprite we created earlier to our tiles
-            tile.sprite = tileSprite;
-            // Add to dictionary by key GroundTileType int value, value Tile
-            _tileTypeDictionary.Add((int)tiletype.GroundTile, tile);
+            Generate(algorithm);
         }
-
-        // Generate random data
-        Generate(new RandomDataGenerator());
-
+    
         // Render our data
         RenderAllTiles();
     }
@@ -88,9 +78,9 @@ public class TilemapStructure : MonoBehaviour
         return x >= 0 && x < Width && y >= 0 && y < Height;
     }
 
-    public void Generate(IWorldGen generator)
+    public void Generate(AlgorithmBase algorithm)
     {
-        generator.Apply(this);
+        algorithm.Apply(this);
     }
 
     /// <summary>
@@ -107,16 +97,52 @@ public class TilemapStructure : MonoBehaviour
         {
             for (int y = 0; y < Height; y++)
             {
-                // Add the position at the same index position as the Tile
-                positionsArray[x * Width + y] = new Vector3Int(x, y, 0);
+                positionsArray[y * Width + x] = new Vector3Int(x, y, 0);
                 // Get what tile is at this position
                 var typeOfTile = GetTile(x, y);
                 // Get the ScriptableObject that matches this type and insert it
-                tilesArray[x * Width + y] = _tileTypeDictionary[typeOfTile];
+                if (!Grid.Tiles.TryGetValue(typeOfTile, out Tile tile))
+                {
+                    if (typeOfTile != 0)
+                    {
+                        Debug.LogError("Tile not defined for id: " + typeOfTile);
+                    }
+ 
+                    tilesArray[y * Width + x] = null;
+                    continue;
+                }
+                tilesArray[y * Width + x] = tile;
             }
         }
  
         _graphicMap.SetTiles(positionsArray, tilesArray);
         _graphicMap.RefreshAllTiles();
+    }
+
+    public List<KeyValuePair<Vector2Int, int>> GetNeighbors(int tileX, int tileY)
+    {
+        int startX = tileX - 1;
+        int startY = tileY - 1;
+        int endX = tileX + 1;
+        int endY = tileY + 1;
+    
+        var neighbors = new List<KeyValuePair<Vector2Int, int>>();
+        for (int x = startX; x < endX + 1; x++)
+        {
+            for (int y = startY; y < endY + 1; y++)
+            {
+                // We don't need to add the tile we are getting the neighbors of.
+                if (x == tileX && y == tileY) continue;
+    
+                // Check if the tile is within the tilemap, otherwise we don't need to pass it along
+                // As it would be an invalid neighbor
+                if (InBounds(x, y))
+                {
+                    // Pass along a key value pair of the coordinate + the tile type
+                    neighbors.Add(new KeyValuePair<Vector2Int, int>(new Vector2Int(x, y), GetTile(x, y)));
+                }
+            }
+        }
+        return neighbors;
     }
 }
