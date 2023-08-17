@@ -12,4 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 54765aca0efc20f4ca14f32871f768ee, type: 3}
   m_Name: TreeGeneration
   m_EditorClassIdentifier: 
-  TreeSelection: []
+  TreeSelection:
+  - Tree: 2001
+    SpawnOnGrounds: 04000000
+    SpawnChancePerCell: 4

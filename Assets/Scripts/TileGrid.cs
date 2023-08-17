@@ -10,20 +10,25 @@ public class TileGrid : MonoBehaviour
     public Dictionary<int, Tile> Tiles { get; private set; }
  
     [Serializable]
-    class GroundTiles
+    class GroundTiles : TileData
     {
         public GroundTileType TileType;
-        public Texture2D Texture;
-        public Color Color;
     }
  
     [Serializable]
-    class ObjectTiles
+    class ObjectTiles : TileData
     {
         public ObjectTileType TileType;
-        public Texture2D Texture;
-        public Color Color;
     }
+
+    class TileData
+    {
+        public Sprite Sprite;
+        public Color Color;
+        public Tile Tile;
+        public Tile.ColliderType ColliderType;
+    }
+
  
     [SerializeField]
     private GroundTiles[] GroundTileTypes;
@@ -57,21 +62,27 @@ public class TileGrid : MonoBehaviour
         }
     }   
 
-    private Tile CreateTile(Color color, Texture2D texture)
+    private Tile CreateTile(Color color, Sprite sprite)
     {
         // If we haven't specified one, we just create an empty one for the color instead
         bool setColor = false;
+        Texture2D texture = sprite == null ? null : sprite.texture;
         if (texture == null)
         {
             setColor = true;
-            texture = new Texture2D(TileSize, TileSize);
+            // Created sprites do not support custom physics shape
+            texture = new Texture2D(TileSize, TileSize)
+            {
+                filterMode = FilterMode.Point
+            };
+            sprite = Sprite.Create(texture, new Rect(0, 0, TileSize, TileSize), new Vector2(0.5f, 0.5f), TileSize);
         }
     
         // We should be using Point mode, to get the most quality out of our tiles
         texture.filterMode = FilterMode.Point;
     
         // Create our sprite with the texture passed along
-        var sprite = Sprite.Create(texture, new Rect(0, 0, TileSize, TileSize), new Vector2(0.5f, 0.5f), TileSize);
+        sprite = Sprite.Create(texture, new Rect(0, 0, TileSize, TileSize), new Vector2(0.5f, 0.5f), TileSize);
     
         // Create a scriptable object instance of type Tile (inherits from TileBase)
         var tile = ScriptableObject.CreateInstance<Tile>();
@@ -99,8 +110,13 @@ public class TileGrid : MonoBehaviour
         {
             // Don't make a tile for empty
             if (tiletype.TileType == 0) continue;
-            // Create tile scriptable object
-            var tile = CreateTile(tiletype.Color, tiletype.Texture);
+
+            // If we have a custom tile, use it otherwise create new
+            var tile = tiletype.Tile == null ? 
+            CreateTile(tiletype.Color, tiletype.Sprite) : 
+            tiletype.Tile;
+            tile.colliderType = tiletype.ColliderType;
+
             // Add to dictionary by key int value, value Tile
             dictionary.Add((int)tiletype.TileType, tile);
         }
@@ -110,8 +126,13 @@ public class TileGrid : MonoBehaviour
         {
             // Don't make a tile for empty
             if (tiletype.TileType == 0) continue;
-            // Create tile scriptable object
-            var tile = CreateTile(tiletype.Color, tiletype.Texture);
+
+            // If we have a custom tile, use it otherwise create new 
+            var tile = tiletype.Tile == null ? 
+            CreateTile(tiletype.Color, tiletype.Sprite) :
+            tiletype.Tile;
+            tile.colliderType = tiletype.ColliderType;
+            
             // Add to dictionary by key int value, value Tile
             dictionary.Add((int)tiletype.TileType, tile);
         }

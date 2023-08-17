@@ -14,22 +14,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Octaves: 5
   Persistance: 0.286
-  Lacunarity: 3
-  NoiseScale: 100
+  Lacunarity: 2.9
+  NoiseScale: 25
   Offset: {x: 0, y: 0}
   TileTypes:
   - Height: 0
-    GroundTile: 0
-  - Height: 0.5
     GroundTile: 1
-  - Height: 0.6
+  - Height: 0.2
     GroundTile: 2
-  - Height: 0.7
+  - Height: 0.3
     GroundTile: 3
-  - Height: 0.8
+  - Height: 0.65
     GroundTile: 4
-  - Height: 0.9
+  - Height: 0.729
     GroundTile: 5
-  - Height: 1
+  - Height: 0.85
     GroundTile: 6
-  ApplyIslandGradient: 0
+  - Height: 1
+    GroundTile: 7
+  ApplyIslandGradient: 1

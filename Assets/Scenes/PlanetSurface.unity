@@ -271,28 +271,52 @@ MonoBehaviour:
   TileSize: 32
   Seed: 0
   GroundTileTypes:
-  - TileType: 1
-    Texture: {fileID: 0}
+  - Sprite: {fileID: 0}
     Color: {r: 0, g: 0, b: 1, a: 0}
-  - TileType: 2
-    Texture: {fileID: 0}
+    Tile: {fileID: 0}
+    ColliderType: 2
+    TileType: 1
+  - Sprite: {fileID: 0}
     Color: {r: 0, g: 1, b: 1, a: 0}
-  - TileType: 3
-    Texture: {fileID: 0}
+    Tile: {fileID: 0}
+    ColliderType: 0
+    TileType: 2
+  - Sprite: {fileID: 0}
     Color: {r: 1, g: 1, b: 0, a: 0}
-  - TileType: 4
-    Texture: {fileID: 0}
+    Tile: {fileID: 0}
+    ColliderType: 0
+    TileType: 3
+  - Sprite: {fileID: 0}
     Color: {r: 0, g: 1, b: 0, a: 0}
-  - TileType: 5
-    Texture: {fileID: 0}
+    Tile: {fileID: 0}
+    ColliderType: 0
+    TileType: 4
+  - Sprite: {fileID: 0}
     Color: {r: 0.5372549, g: 0.20392157, b: 0.09803922, a: 0}
-  - TileType: 6
-    Texture: {fileID: 0}
+    Tile: {fileID: 0}
+    ColliderType: 0
+    TileType: 5
+  - Sprite: {fileID: 0}
     Color: {r: 0.3019608, g: 0.3019608, b: 0.3019608, a: 0}
-  - TileType: 7
-    Texture: {fileID: 0}
+    Tile: {fileID: 0}
+    ColliderType: 0
+    TileType: 6
+  - Sprite: {fileID: 0}
     Color: {r: 1, g: 1, b: 1, a: 0}
-  ObjectTileTypes: []
+    Tile: {fileID: 0}
+    ColliderType: 0
+    TileType: 7
+  - Sprite: {fileID: 0}
+    Color: {r: 0, g: 0.49019608, b: 1, a: 0}
+    Tile: {fileID: 0}
+    ColliderType: 0
+    TileType: 8
+  ObjectTileTypes:
+  - Sprite: {fileID: 21300000, guid: 1db661f9254d7e84e9c1abb5d8955cd6, type: 3}
+    Color: {r: 0, g: 0, b: 0, a: 0}
+    Tile: {fileID: 0}
+    ColliderType: 1
+    TileType: 2001
 --- !u!1 &1544467662
 GameObject:
   m_ObjectHideFlags: 0
@@ -305,6 +329,9 @@ GameObject:
   - component: {fileID: 1544467666}
   - component: {fileID: 1544467665}
   - component: {fileID: 1544467664}
+  - component: {fileID: 1544467667}
+  - component: {fileID: 1544467669}
+  - component: {fileID: 1544467668}
   m_Layer: 0
   m_Name: GroundMap
   m_TagString: Untagged
@@ -341,6 +368,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _algorithms:
   - {fileID: 11400000, guid: 6ce27bf084c38c74aa7539d58a9cdeac, type: 2}
+  - {fileID: 11400000, guid: 44181e98db4f2da44bfc3a0da5debcad, type: 2}
   Width: 250
   Height: 250
   Grid: {fileID: 0}
@@ -432,6 +460,67 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
+--- !u!19719996 &1544467667
+TilemapCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1544467662}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 1
+  m_Offset: {x: 0, y: 0}
+  m_MaximumTileChangeCount: 1000
+  m_ExtrusionFactor: 0
+--- !u!66 &1544467668
+CompositeCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1544467662}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_GeometryType: 0
+  m_GenerationType: 0
+  m_EdgeRadius: 0
+  m_ColliderPaths:
+  - m_Collider: {fileID: 1544467667}
+    m_ColliderPaths: []
+  m_CompositePaths:
+    m_Paths: []
+  m_VertexDistance: 0.0005
+  m_OffsetDistance: 0.00005
+--- !u!50 &1544467669
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1544467662}
+  m_BodyType: 2
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!1 &1634959483
 GameObject:
   m_ObjectHideFlags: 0
@@ -444,6 +533,7 @@ GameObject:
   - component: {fileID: 1634959487}
   - component: {fileID: 1634959486}
   - component: {fileID: 1634959485}
+  - component: {fileID: 1634959488}
   m_Layer: 0
   m_Name: Tilemap (1)
   m_TagString: Untagged
@@ -572,3 +662,19 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
+--- !u!19719996 &1634959488
+TilemapCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1634959483}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_MaximumTileChangeCount: 1000
+  m_ExtrusionFactor: 0
