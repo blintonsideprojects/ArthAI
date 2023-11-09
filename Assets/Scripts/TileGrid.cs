@@ -3,140 +3,146 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public class TileGrid : MonoBehaviour
-{
-    public int Width, Height;
-    public int TileSize, Seed;
-    public Dictionary<int, Tile> Tiles { get; private set; }
- 
-    [Serializable]
-    class GroundTiles : TileData
-    {
-        public GroundTileType TileType;
-    }
- 
-    [Serializable]
-    class ObjectTiles : TileData
-    {
-        public ObjectTileType TileType;
-    }
 
-    class TileData
+    public class TileGrid : MonoBehaviour
     {
-        public Sprite Sprite;
-        public Color Color;
-        public Tile Tile;
-        public Tile.ColliderType ColliderType;
-    }
+        public int Width, Height;
+        public int TileSize, Seed;
 
- 
-    [SerializeField]
-    private GroundTiles[] GroundTileTypes;
-    [SerializeField]
-    private ObjectTiles[] ObjectTileTypes;
+        [SerializeField]
+        private TileTypes.GroundTiles[] GroundTileTypes;
+        [SerializeField]
+        private TileTypes.ObjectTiles[] ObjectTileTypes;
 
-    public Dictionary<TilemapType, TilemapStructure> Tilemaps;
+        private Dictionary<int, Tile> _tiles;
+        private Dictionary<TilemapType, TilemapStructure> _tilemaps;
 
-    private void Awake()
-    {
-        Tiles = InitializeTiles();
-    
-        Tilemaps = new Dictionary<TilemapType, TilemapStructure>();
-    
-        // Add all our tilemaps by type to collection, so we can access them easily.
-        foreach (Transform child in transform)
+        private void Awake()
         {
-            var tilemap = child.GetComponent<TilemapStructure>();
-            if (tilemap == null) continue;
-            if (Tilemaps.ContainsKey(tilemap.Type))
+            InitializeTiles();
+
+            _tilemaps = new Dictionary<TilemapType, TilemapStructure>();
+
+            // Add all our tilemaps by name to collection, so we can access them easily.
+            foreach (Transform child in transform)
             {
-                throw new Exception("Duplicate tilemap type: " + tilemap.Type);
+                var tilemap = child.GetComponent<TilemapStructure>();
+                if (tilemap == null) continue;
+                if (_tilemaps.ContainsKey(tilemap.Type))
+                {
+                    throw new Exception("A duplicate tilemap of type: " + tilemap.Type + " exists in the scene.");
+                }
+                _tilemaps.Add(tilemap.Type, tilemap);
             }
-            Tilemaps.Add(tilemap.Type, tilemap);
-        }
-    
-        // Let's initialize our tilemaps now that they are in the collection.
-        foreach (var tilemap in Tilemaps.Values)
-        {
-            tilemap.Initialize();
-        }
-    }   
 
-    private Tile CreateTile(Color color, Sprite sprite)
-    {
-        // If we haven't specified one, we just create an empty one for the color instead
-        bool setColor = false;
-        Texture2D texture = sprite == null ? null : sprite.texture;
-        if (texture == null)
-        {
-            setColor = true;
-            // Created sprites do not support custom physics shape
-            texture = new Texture2D(TileSize, TileSize)
+            // Let's initialize our tilemaps now that they are in the collection.
+            foreach (var tilemap in _tilemaps.Values)
             {
-                filterMode = FilterMode.Point
+                tilemap.Initialize();
+            }
+        }
+
+        /// <summary>
+        /// Returns all the cached shared tiles available to be placed on the tilemap
+        /// </summary>
+        /// <returns></returns>
+        public Dictionary<int, Tile> GetTileCache()
+        {
+            return _tiles;
+        }
+
+        /// <summary>
+        /// Returns the tilemap of the given type
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public TilemapStructure GetTilemap(TilemapType type)
+        {
+            if (!_tilemaps.TryGetValue(type, out TilemapStructure structure))
+                throw new Exception($"This grid does not contain a tilemap of type {type}.");
+            return structure;
+        }
+
+        private void InitializeTiles()
+        {
+            _tiles = new Dictionary<int, Tile>
+            {
+                // Add default void tile
+                { 0, null }
             };
-            sprite = Sprite.Create(texture, new Rect(0, 0, TileSize, TileSize), new Vector2(0.5f, 0.5f), TileSize);
+
+            // Add all tilesets here
+            AddTileSet(_tiles, GroundTileTypes);
+            AddTileSet(_tiles, ObjectTileTypes);
         }
-    
-        // We should be using Point mode, to get the most quality out of our tiles
-        texture.filterMode = FilterMode.Point;
-    
-        // Create our sprite with the texture passed along
-        sprite = Sprite.Create(texture, new Rect(0, 0, TileSize, TileSize), new Vector2(0.5f, 0.5f), TileSize);
-    
-        // Create a scriptable object instance of type Tile (inherits from TileBase)
-        var tile = ScriptableObject.CreateInstance<Tile>();
-    
-        if (setColor)
+
+        /// <summary>
+        /// Use this method to add a new tileset to the dictionary
+        /// </summary>
+        /// <param name="dictionary"></param>
+        /// <param name="tileData"></param>
+        /// <exception cref="Exception"></exception>
+        private void AddTileSet(Dictionary<int, Tile> tiles, TileTypes.TileData[] tileData)
         {
-            // Make sure color is not transparant
-            color.a = 1;
-            // Set the tile color
-            tile.color = color;
+            foreach (var tiletype in tileData)
+            {
+                if (tiletype.TileTypeId == 0) continue;
+
+                // If we have a custom tile, use it otherwise create a new tile
+                var tile = tiletype.Tile == null ?
+                    CreateTile(tiletype.Color, tiletype.Sprite) :
+                    tiletype.Tile;
+                tile.colliderType = tiletype.ColliderType;
+                
+                // Check if the tile id already exists in the tiles
+                if (tiles.ContainsKey(tiletype.TileTypeId))
+                {
+                    var tileTypeInfo = GetTileTypeInfo(tiletype);
+                    throw new Exception($"Error adding tile from enum [{tileTypeInfo.Item1}]: Tile Id '{tiletype.TileTypeId}:{tileTypeInfo.Item2}' already exists in another tile enum.");
+                }
+
+                tiles.Add(tiletype.TileTypeId, tile);
+            }
         }
-    
-        // Assign the sprite we created earlier to our tiles
-        tile.sprite = sprite;
-    
-        return tile;
+
+        /// <summary>
+        /// Uses reflection to retrieve the type information from the TileData
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        private (string, string) GetTileTypeInfo(TileTypes.TileData data)
+        {
+            var type = data.GetType();
+            var tileTypeField = type.GetField("TileType", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var value = tileTypeField.GetValue(data);
+            return (tileTypeField.FieldType.Name, value.ToString());
+        }
+
+        private Tile CreateTile(Color color, Sprite sprite)
+        {
+            // Create an instance of type Tile (inherits from TileBase)
+            var tile = ScriptableObject.CreateInstance<Tile>();
+
+            // No sprite specified, we create one for the color instead
+            if (sprite == null)
+            {
+                // Created sprites do not support custom physics shape
+                var texture = new Texture2D(TileSize, TileSize)
+                {
+                    filterMode = FilterMode.Point
+                };
+
+                // Create new sprite without any custom physics shape
+                sprite = Sprite.Create(texture, new Rect(0, 0, TileSize, TileSize), new Vector2(0.5f, 0.5f), TileSize);
+
+                // Make sure color is not transparant and set color to the tile
+                color.a = 1;
+                tile.color = color;
+            }
+
+            tile.sprite = sprite;
+
+            return tile;
+        }
     }
-
-    private Dictionary<int, Tile> InitializeTiles() 
-    {
-        var dictionary = new Dictionary<int, Tile>();
-    
-        // Create a Tile for each GroundTileType
-        foreach (var tiletype in GroundTileTypes)
-        {
-            // Don't make a tile for empty
-            if (tiletype.TileType == 0) continue;
-
-            // If we have a custom tile, use it otherwise create new
-            var tile = tiletype.Tile == null ? 
-            CreateTile(tiletype.Color, tiletype.Sprite) : 
-            tiletype.Tile;
-            tile.colliderType = tiletype.ColliderType;
-
-            // Add to dictionary by key int value, value Tile
-            dictionary.Add((int)tiletype.TileType, tile);
-        }
-    
-        // Create a Tile for each ObjectTileType
-        foreach (var tiletype in ObjectTileTypes)
-        {
-            // Don't make a tile for empty
-            if (tiletype.TileType == 0) continue;
-
-            // If we have a custom tile, use it otherwise create new 
-            var tile = tiletype.Tile == null ? 
-            CreateTile(tiletype.Color, tiletype.Sprite) :
-            tiletype.Tile;
-            tile.colliderType = tiletype.ColliderType;
-            
-            // Add to dictionary by key int value, value Tile
-            dictionary.Add((int)tiletype.TileType, tile);
-        }
-    
-        return dictionary;
-    }
-}

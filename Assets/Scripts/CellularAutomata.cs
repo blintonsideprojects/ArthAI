@@ -48,11 +48,11 @@ public class CellularAutomata : AlgorithmBase
                                     .Select(a => a.Key)
                                     .First();
  
-                                tilemap.SetTile(x, y, dominantTile);
+                                tilemap.SetTile(x, y, dominantTile, setDirty: false);
                             }
                             else
                             {
-                                tilemap.SetTile(x, y, replaceTileId);
+                                tilemap.SetTile(x, y, replaceTileId, setDirty: false);
                             }     
                         }
                     }
